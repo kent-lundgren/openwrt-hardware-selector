@@ -10,7 +10,6 @@ p#page { margin-right: 10px }
 div.select { margin-right: 10px }
 select { width : 250px }
 label { display: inline-block; width: 180px }
-tr:nth-child(odd) { background-color: lightcyan }
 table {
   margin-top: 10px;
   border-top: 1px solid black;
@@ -18,6 +17,7 @@ table {
   border-collapse: collapse;
   width: 100%
 }
+tr:nth-child(odd) { background-color: lightcyan }
 td { padding: 5px }
 td.t1 { padding-right: 10px }
 div.spaced {
@@ -140,17 +140,17 @@ function selectDiv(key, options, selections) {
 function getRowIndexes(ignoreKey, selections) {
   if ((!ignoreKey || !selections[ignoreKey]) && rowIndexes) return rowIndexes
   const a = []
-  for (let i=0; i<entries.length; i++) {
+  entries.forEach((row,i) => {
     const flag = Object.keys(selections).filter(key => key !== ignoreKey).every(key => {
       const j = keys[key]
-      const e = entries[i][j]
+      const e = row[j]
       if (Array.isArray(e))
         return e.some(opt => selections[key].includes(opt))
       else
         return selections[key].includes(e)
     })
     if (flag) a.push(i)
-  }
+  })
   if (!selections[ignoreKey]) rowIndexes = a
   return a
 }
@@ -176,19 +176,18 @@ let rowList
 
 function update() {
   rowIndexes = null
-  if (Object.keys(selectElements).length)
-    Object.keys(selectElements).forEach(key => {
-      if (selections[key]) {
-        const displayedOpts = Array.from(selectElements[key].options)
-          .map(e => options[key][parseInt(e.value)])
-	selections[key] = selections[key].filter(opt => !displayedOpts.includes(opt))
-      }
-      const selected = Array.from(selectElements[key].selectedOptions)
+  for (const key in selectElements) {
+    if (selections[key]) {
+      const displayedOpts = Array.from(selectElements[key].options)
         .map(e => options[key][parseInt(e.value)])
-      if (selected.length && !selections[key]) selections[key] = []
-      selected.forEach(opt => selections[key].push(opt))
-      if (selections[key] && !selections[key].length) delete selections[key]
-    })
+      selections[key] = selections[key].filter(opt => !displayedOpts.includes(opt))
+    }
+    const selected = Array.from(selectElements[key].selectedOptions)
+      .map(e => options[key][parseInt(e.value)])
+    if (selected.length && !selections[key]) selections[key] = []
+    selected.forEach(opt => selections[key].push(opt))
+    if (selections[key] && !selections[key].length) delete selections[key]
+  }
   const selectors = []
   options = Object.create(null)
   let flag
